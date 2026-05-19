@@ -1,19 +1,20 @@
 from rest_framework import serializers
 from .models import Category
 
-
 class CategorySerializer(serializers.ModelSerializer):
-    # ✅ For write (create/update)
-    category_image = serializers.ImageField(required=False, allow_null=True, write_only=True)
-    
-    # ✅ For read — returns full Cloudinary URL
-    category_image_url = serializers.SerializerMethodField(read_only=True)
-
     class Meta:
         model = Category
-        fields = ['id', 'category_name', 'category_image', 'category_image_url', 'created_at']
+        fields = ['id', 'category_name', 'category_image', 'created_at']
 
-    def get_category_image_url(self, obj):
-        if obj.category_image:
-            return obj.category_image.url  # Cloudinary gives full https:// URL
-        return None
+    # Moves the case-insensitive validation logic out of the view and into the serializer
+    def validate_category_name(self, value):
+        # On update, exclude the current instance from the duplicate check
+        instance = self.instance
+        queryset = Category.objects.filter(category_name__iexact=value)
+        
+        if instance:
+            queryset = queryset.exclude(pk=instance.pk)
+            
+        if queryset.exists():
+            raise serializers.ValidationError("Category name already exists")
+        return value
