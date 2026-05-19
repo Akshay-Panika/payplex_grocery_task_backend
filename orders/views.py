@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Order
 from .serializers import OrderSerializer
+from rest_framework import status
 
 
 # CREATE ORDER
@@ -26,6 +27,25 @@ class CreateOrderView(APIView):
             "status": False,
             "errors": serializer.errors
         })
+
+
+class DeleteOrderView(APIView):
+
+    def delete(self, request, pk):
+        try:
+            order = Order.objects.get(pk=pk)
+            order.delete()
+
+            return Response({
+                "status": True,
+                "message": "Order deleted successfully"
+            }, status=status.HTTP_200_OK)
+
+        except Order.DoesNotExist:
+            return Response({
+                "status": False,
+                "message": "Order not found"
+            }, status=status.HTTP_404_NOT_FOUND)
 
 
 # GET ALL ORDERS
