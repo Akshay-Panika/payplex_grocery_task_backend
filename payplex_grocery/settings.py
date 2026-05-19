@@ -29,7 +29,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'accounts',
     'category',
-    'product'
+    'product',
+    'orders'
 ]
 
 CLOUDINARY_STORAGE = {
