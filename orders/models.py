@@ -2,7 +2,8 @@ from django.db import models
 
 class Order(models.Model):
     order_id = models.CharField(max_length=20, unique=True, blank=True)
-    items = models.JSONField()  # example: [1,2,3]
+    user_id = models.IntegerField()   # ✅ ADD THIS
+    items = models.JSONField()
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     status = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -15,7 +16,7 @@ class Order(models.Model):
                 number = int(last.order_id.replace("order", ""))
                 number += 1
             else:
-                number = 11  # starting
+                number = 11
 
             self.order_id = f"order{number}"
 

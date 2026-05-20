@@ -1,17 +1,17 @@
-from django.shortcuts import render
-
-# Create your views here.
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import status
 from .models import Order
 from .serializers import OrderSerializer
-from rest_framework import status
 
 
-# CREATE ORDER
 class CreateOrderView(APIView):
-    def post(self, request):
-        serializer = OrderSerializer(data=request.data)
+
+    def post(self, request, user_id):
+        data = request.data.copy()
+        data['user_id'] = user_id
+
+        serializer = OrderSerializer(data=data)
 
         if serializer.is_valid():
             order = serializer.save()
@@ -21,14 +21,27 @@ class CreateOrderView(APIView):
                 "message": "Order created",
                 "order_id": order.order_id,
                 "data": OrderSerializer(order).data
-            })
+            }, status=status.HTTP_201_CREATED)
 
         return Response({
             "status": False,
             "errors": serializer.errors
-        })
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
 
+class OrderListView(APIView):
 
+    def get(self, request, user_id):
+        orders = Order.objects.filter(user_id=user_id).order_by('-id')
+
+        serializer = OrderSerializer(orders, many=True)
+
+        return Response({
+            "status": True,
+            "count": orders.count(),
+            "data": serializer.data
+        }, status=status.HTTP_200_OK)
+    
 class DeleteOrderView(APIView):
 
     def delete(self, request, pk):
@@ -45,17 +58,4 @@ class DeleteOrderView(APIView):
             return Response({
                 "status": False,
                 "message": "Order not found"
-            }, status=status.HTTP_404_NOT_FOUND)
-
-
-# GET ALL ORDERS
-class OrderListView(APIView):
-    def get(self, request):
-        orders = Order.objects.all().order_by('-id')
-        serializer = OrderSerializer(orders, many=True)
-
-        return Response({
-            "status": True,
-            "count": orders.count(),
-            "data": serializer.data
-        })
+            }, status=status.HTTP_404_NOT_FOUND)    
